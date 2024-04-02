@@ -51,4 +51,15 @@ export class UserService {
         })
     }
 
+    async getAllAuthor() {
+        const users = await this.prisma.user.findMany({
+            where: {
+                role: 0
+            }
+        })
+        if(users) {
+            return users
+        }
+    }
+
 }
