@@ -19,6 +19,19 @@ export class ArticleService {
         return user.articles;
     }
 
+    async getById(id: number) {
+        const article = await this.prisma.article.findUnique({
+            where: { id: id },
+            include: { authors: true }, 
+        });
+
+        if (!article) {
+            throw new Error(`article with id ${id} not found`);
+        }
+
+        return article;
+    }
+
     async create(dto: CreateArticleDto) {
         const { title, summary, pdfLink, authors } = dto;
 
@@ -72,6 +85,21 @@ export class ArticleService {
         });
 
         return updatedArticle;
+    }
+
+    async delete(id: number) {
+        const existingArticle = await this.prisma.article.findUnique({
+            where: { id },
+        });
+        
+        if (!existingArticle) {
+            throw new DOMException(`Article with id ${id} not found`);
+        }
+
+        await this.prisma.article.delete({
+            where: { id },
+        });
+
     }
 
 }
