@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { CreateArticleDto, EditArticleAuthorDto } from './dto/article.dto';
+import { CreateArticleDto, EditArticleAuthorDto, EditArticleScore } from './dto/article.dto';
 
 @Injectable()
 export class ArticleService {
@@ -44,7 +44,8 @@ export class ArticleService {
                     connect: [...authors]
                 },
                 score1: null,
-                score2: null
+                score2: null,
+                publicated: false
             },
             include: { authors: true } 
         });
@@ -87,6 +88,29 @@ export class ArticleService {
         return updatedArticle;
     }
 
+    async editScore(dto: EditArticleScore) {
+        const { id, score1, score2 } = dto;
+
+        const existingArticle = await this.prisma.article.findUnique({
+            where: { id },
+            include: { authors: true }
+        });
+        
+        if (!existingArticle) {
+            throw new DOMException(`Article with id ${id} not found`);
+        }
+
+        const updatedArticle = await this.prisma.article.update({
+            where: { id },
+            data: {
+                score1: score1,
+                score2: score2
+            }
+        });
+
+        return updatedArticle;
+    }
+
     async delete(id: number) {
         const existingArticle = await this.prisma.article.findUnique({
             where: { id },
@@ -100,6 +124,33 @@ export class ArticleService {
             where: { id },
         });
 
+    }
+
+    async getAll() {
+        const allArticles = await this.prisma.article.findMany({
+            include: { authors: true }
+        });
+        return allArticles;
+    }
+
+    async publish(id: number) {
+        const existingArticle = await this.prisma.article.findUnique({
+            where: { id },
+        });
+        
+        if (!existingArticle) {
+            throw new DOMException(`Article with id ${id} not found`);
+        }
+
+        const updatedArticle = await this.prisma.article.update({
+            where: { id },
+            data: {
+                publicated: true,
+                status: 1
+            }
+        });
+
+        return updatedArticle;
     }
 
 }

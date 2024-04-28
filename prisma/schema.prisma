@@ -27,6 +27,7 @@ model Article {
   score1  Int?
   score2  Int?
   authors User[]
+  publicated Boolean
 
   @@map("article")
 }

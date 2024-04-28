@@ -38,6 +38,18 @@ export class EditArticleAuthorDto {
     authors: UserId[];
 }
 
+export class EditArticleScore {
+
+    @IsInt()
+    id: number;
+
+    @IsInt()
+    score1: number;
+
+    @IsInt()
+    score2: number;
+}
+
 class UserId {
     @IsInt()
     id: number;

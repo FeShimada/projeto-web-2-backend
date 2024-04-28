@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post, UseGuards, Put, Delete } from '@nestjs/common';
 import { JwtGuard } from 'src/auth/guards/jwt.guard';
 import { ArticleService } from './article.service';
-import { CreateArticleDto, EditArticleAuthorDto } from './dto/article.dto';
+import { CreateArticleDto, EditArticleAuthorDto, EditArticleScore } from './dto/article.dto';
 
 @Controller('article')
 export class ArticleController {
@@ -12,6 +12,12 @@ export class ArticleController {
     @Get('user/:id')
     async getByUser(@Param("id") id: number) {
        return await this.articleService.getByUser(id)
+    }
+
+    @UseGuards(JwtGuard)
+    @Get('getall/article')
+    async getAllArticles() {
+       return await this.articleService.getAll()
     }
 
     @UseGuards(JwtGuard)
@@ -36,5 +42,17 @@ export class ArticleController {
     @Put('edit/author')
     async editAuthor(@Body() dto: EditArticleAuthorDto) {
        return await this.articleService.edit(dto)
+    }
+
+    @UseGuards(JwtGuard)
+    @Put('edit/score')
+    async editScore(@Body() dto: EditArticleScore) {
+       return await this.articleService.editScore(dto)
+    }
+
+    @UseGuards(JwtGuard)
+    @Post('/publish/:id')
+    async publish(@Param("id") id: number) {
+       return await this.articleService.publish(id)
     }
 }
