@@ -8,26 +8,36 @@ datasource db {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  name     String
-  email    String    @unique
-  role     Int       @default(0)
-  password String
-  articles Article[]
+  id                 Int        @id @default(autoincrement())
+  name               String
+  email              String     @unique
+  role               String
+  password           String
+  createdActivities  Activity[] @relation("CreatedActivities")
+  assignedActivities Activity[] @relation("AssignedActivities")
 
   @@map("user")
 }
 
-model Article {
-  id      Int    @id @default(autoincrement())
-  title   String
-  summary String
-  pdfLink String
-  status  Int    @default(0)
-  score1  Int?
-  score2  Int?
-  authors User[]
-  publicated Boolean
+model Activity {
+  id           Int        @id @default(autoincrement())
+  title        String
+  description  String
+  createdById  Int
+  assignedToId Int?
+  createdBy    User       @relation("CreatedActivities", fields: [createdById], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  assignedTo   User?      @relation("AssignedActivities", fields: [assignedToId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  artifacts    Artifact[] @relation("ActivityArtifacts")
 
-  @@map("article")
+  @@map("activity")
+}
+
+model Artifact {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  activityId  Int
+  activity    Activity @relation("ActivityArtifacts", fields: [activityId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@map("artifact")
 }

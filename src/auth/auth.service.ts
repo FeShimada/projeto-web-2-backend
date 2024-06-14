@@ -16,13 +16,13 @@ export class AuthService {
 
     async login(dto: LoginDto) {
 
-        const user = await this.validateUser(dto)
+        const user = await this.validateUser(dto);
         const payload = {
             email: user.email,
             sub: {
                 name: user.name
             },
-        }
+        };
         return {
             user,
             backendTokens: {
@@ -36,7 +36,7 @@ export class AuthService {
                 }),
                 expiresIn: new Date().setTime(new Date().getTime() + EXPIRE_TIME)
             }
-        }
+        };
     }
 
     async validateUser(dto: LoginDto) {
@@ -53,7 +53,7 @@ export class AuthService {
         const payload = {
             email: user.email,
             sub: user.sub
-        }
+        };
 
         return {
             accessToken: await this.jwtService.signAsync(payload, {
@@ -65,6 +65,15 @@ export class AuthService {
                 secret: process.env.jwtRefreshTokenKey
             }),
             expiresIn: new Date().setTime(new Date().getTime() + EXPIRE_TIME)
+        };
+    }
+
+    async validateToken(token: string) {
+        try {
+            const decoded = this.jwtService.verify(token); // Verifies if token is valid
+            return decoded; // Return decoded token payload
+        } catch (error) {
+            throw new UnauthorizedException('Token inválido ou expirado');
         }
     }
 }

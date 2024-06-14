@@ -1,7 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { AssignArticleToMeasurerDto, CreateUserDto, EditUserDto } from './dto/user.dto';
+import { CreateUserDto, UpdateRoleDto } from './dto/user.dto';
 import { hash } from 'bcrypt';
+import UserRole from 'src/helpers/UserRole';
 
 @Injectable()
 export class UserService {
@@ -10,141 +11,68 @@ export class UserService {
 
     }
 
+    // SignUp
     async create(dto: CreateUserDto) {
         const user = await this.prisma.user.findUnique({
             where: {
                 email: dto.email
             }
-        })
+        });
 
-        if(user) throw new ConflictException('email duplicado');
+        if (user) throw new ConflictException('email duplicado');
 
         const newUser = await this.prisma.user.create({
             data: {
                 ...dto,
                 password: await hash(dto.password, 10)
             }
-        })
+        });
 
-        const { password, ...obj } = newUser
+        const { password, ...obj } = newUser;
 
         return obj;
     }
 
-    async getById(id: number) {
-        const user = await this.prisma.user.findUnique({
-            where: {
-                id: id
-            }
-        })
-        if(user) {
-            const { password, ...obj } = user
-            return obj
-        }
+    async getAll() {
+        const allUsers = await this.prisma.user.findMany({
+            include: { createdActivities: true, assignedActivities: true }
+        });
+        return allUsers;
     }
 
+    // Utils
     async findByEmail(email: string) {
         return await this.prisma.user.findUnique({
             where: {
                 email: email
             }
-        })
+        });
     }
 
-    async getAllAuthor() {
-        const users = await this.prisma.user.findMany({
+    // Utils
+    async userRole(email: string): Promise<UserRole | null> {
+        const user = await this.prisma.user.findUnique({
             where: {
-                role: 0
-            }
-        })
-        if(users) {
-            return users
-        }
-    }
-
-    async getAllMeasurer() {
-        const users = await this.prisma.user.findMany({
-            where: {
-                role: 1
-            }
-        })
-        if(users) {
-            return users
-        }
-    }
-
-    async getAllUsers() {
-        const users = await this.prisma.user.findMany({
-            include: { articles: true }
-        })
-        if(users) {
-            return users
-        }
-    }
-
-    async delete(id: number) {
-        const existingUser = await this.prisma.user.findUnique({
-            where: { id },
-        });
-        
-        if (!existingUser) {
-            throw new DOMException(`User with id ${id} not found`);
-        }
-
-        await this.prisma.user.delete({
-            where: { id },
-        });
-
-    }
-
-    async edit(dto: EditUserDto) {
-        const { id, name, email, role } = dto;
-
-        const existingUser = await this.prisma.user.findUnique({
-            where: { id },
-            include: { articles: true }
-        });
-        
-        if (!existingUser) {
-            throw new DOMException(`User with id ${id} not found`);
-        }
-
-        const updatedUser = await this.prisma.user.update({
-            where: { id },
-            data: {
-                name: name,
-                email: email,
-                role: role
+                "email": email
             },
-            include: { articles: true } 
+            select: {
+                "role": true
+            }
         });
 
-        return updatedUser;
+        return user?.["role"] as UserRole;
     }
 
-    async assignArticleToMeasurer(dto: AssignArticleToMeasurerDto) {
-        const { articles, id } = dto;
+    async updateRole(updateRoleDto: UpdateRoleDto) {
 
-        const existingMeasurer = await this.prisma.user.findUnique({
-            where: { id },
-            include: { articles: true }
-        });
-        
-        if (!existingMeasurer) {
-            throw new DOMException(`Measurer with id ${id} not found`);
+        const user = await this.findByEmail(updateRoleDto.email);
+        if (!user) {
+            throw new ConflictException('Usuário não encontrado.');
         }
 
-        const updatedMeasurer = await this.prisma.user.update({
-            where: { id, role: 1 },
-            data: {
-                articles: { 
-                    connect: [...articles],
-                },
-            },
-            include: { articles: true } 
+        return await this.prisma.user.update({
+            where: { email: updateRoleDto.email },
+            data: { role: updateRoleDto.role }
         });
-
-        return updatedMeasurer;
     }
-
 }

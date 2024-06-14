@@ -1,50 +1,32 @@
 
-import { IsEmail, IsString, IsInt, IsArray, ValidateNested } from "class-validator";
-import { Type } from "class-transformer";
+import { IsEmail, IsString, IsEnum } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
+import UserRole from "src/helpers/UserRole";
 
 
 export class CreateUserDto {
 
+    @ApiProperty()
     @IsString()
     name: string;
 
+    @ApiProperty()
     @IsEmail()
     email: string;
 
-    @IsInt()
-    role: number;
+    @ApiProperty()
+    @IsString()
+    role: string;
 
+    @ApiProperty()
     @IsString()
     password: string;
 }
 
-export class AssignArticleToMeasurerDto {
-
-    @IsInt()
-    id: number;
-
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ArticleId)
-    articles: ArticleId[];
-}
-
-class ArticleId {
-    @IsInt()
-    id: number;
-}
-
-export class EditUserDto {
-
-    @IsInt()
-    id: number;
-
-    @IsString()
-    name: string;
-
+export class UpdateRoleDto {
     @IsEmail()
     email: string;
 
-    @IsInt()
-    role: number;
+    @IsEnum(UserRole)
+    role: UserRole;
 }
